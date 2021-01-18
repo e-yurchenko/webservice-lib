@@ -2,6 +2,7 @@
   "name": "e-yurchenko/webservice-lib",
   "description": "Prestaweb360 Webservice access library",
   "license": "MIT",
+  "version": "1.0.0",
   "authors": [
     {
       "name": "Prestaweb360"
