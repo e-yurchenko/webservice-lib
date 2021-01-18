@@ -1,0 +1,17 @@
+{
+  "name": "Prestaweb360/WebserviceLib",
+  "description": "Prestaweb360 Webservice access library",
+  "authors": [
+    {
+      "name": "Prestaweb360"
+    }
+  ],
+  "autoload": {
+    "classmap": [
+      "Webservice.php"
+    ]
+  },
+  "require": {
+    "php": ">= 5.3.0",
+  }
+}
