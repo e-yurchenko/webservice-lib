@@ -13,8 +13,12 @@ class Webservice
 
     public function get($options)
     {
-        $this->resource = $options['resource'];
-        $this->id = $options['id'];
+        if (isset($options['resource'])) {
+            $this->resource = $options['resource'];
+        }
+        if (isset($options['id'])) {
+            $this->id = $options['id'];
+        }
 
         if ($this->resource) {
             $this->url .= '/' . $this->resource . '/';
@@ -48,12 +52,16 @@ class Webservice
             if ($this->id) {
                 return $this->xmlToArray($xml);
             } else {
+
+                if (empty($xml)) {
+                    return false;
+                }
+
                 $result = $this->xmlToArray($xml)[$this->resource];
                 $tmp = [];
 
                 foreach ($result as $items) {
-                    $data = $items['@attributes'];
-                    $tmp[$this->resource][] = $data;
+                    $tmp[$this->resource][] = $items;
                 }
                 return $tmp;
             }
@@ -96,7 +104,7 @@ class Webservice
                 $this->url .= $id;
 
                 if ($data) {
-                    return $this->execute([
+                    $this->execute([
                         CURLOPT_CUSTOMREQUEST => 'PUT',
                         CURLOPT_POSTFIELDS => http_build_query($data),
                     ]);
@@ -136,7 +144,6 @@ class Webservice
         $curl = curl_init();
 
         $defaultCurlOptions = array(
-            CURLOPT_PORT => "8888",
             CURLOPT_URL => $this->urlFormatter(),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
