@@ -3,12 +3,14 @@
 class Webservice
 {
     protected $url;
+    protected $password;
     protected $resource;
     protected $id;
 
-    public function __construct($url)
+    public function __construct($url, $password)
     {
         $this->url = $url;
+        $this->password = $password;
     }
 
     public function get($options)
@@ -150,6 +152,7 @@ class Webservice
             CURLOPT_MAXREDIRS => 10,
             CURLOPT_TIMEOUT => 30,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_USERPWD => ":$this->password",
             CURLOPT_HTTPHEADER => array(
                 "cache-control: no-cache",
                 "content-type: application/x-www-form-urlencoded",
