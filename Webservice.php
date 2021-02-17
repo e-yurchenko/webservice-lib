@@ -59,9 +59,8 @@ class Webservice
                     return false;
                 }
 
-                if (count($this->xmlToArray($xml)) < 2) {
-                    $result = $this->xmlToArray($xml);
-                } else {
+                $result = $this->xmlToArray($xml);
+                if (!isset($result[$this->resource]['id'])) {
                     $result = $this->xmlToArray($xml)[$this->resource];
                 }
 
