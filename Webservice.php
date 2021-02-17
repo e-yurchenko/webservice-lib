@@ -59,7 +59,13 @@ class Webservice
                     return false;
                 }
 
-                $result = $this->xmlToArray($xml)[$this->resource];
+                if (count($this->xmlToArray($xml)) < 2) {
+                    $result = $this->xmlToArray($xml);
+                } else {
+                    $result = $this->xmlToArray($xml)[$this->resource];
+                }
+
+
                 $tmp = [];
 
                 foreach ($result as $items) {
@@ -106,7 +112,7 @@ class Webservice
                 $this->url .= $id;
 
                 if ($data) {
-                    $this->execute([
+                    return $this->execute([
                         CURLOPT_CUSTOMREQUEST => 'PUT',
                         CURLOPT_POSTFIELDS => http_build_query($data),
                     ]);
@@ -178,6 +184,7 @@ class Webservice
     private function xmlToArray($xml)
     {
         $xml = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
+
 
         return json_decode(json_encode($xml), TRUE);
     }
