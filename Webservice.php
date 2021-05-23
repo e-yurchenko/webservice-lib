@@ -1,11 +1,14 @@
 <?php
 
+use \Symfony\Component\HttpClient\HttpClient;
+
 class Webservice
 {
     protected $url;
     protected $password;
     protected $resource;
     protected $id;
+    protected $client;
 
     public function __construct($url, $password)
     {
@@ -15,135 +18,122 @@ class Webservice
 
     public function get($options)
     {
-        if (isset($options['resource'])) {
+        if (isset($options['resource']))
             $this->resource = $options['resource'];
-        }
-        if (isset($options['id'])) {
+
+        if (isset($options['id']))
             $this->id = $options['id'];
-        }
 
-        if ($this->resource) {
-            $this->url .= '/' . $this->resource . '/';
-
-            if ($this->id) {
-                $this->url .= '/' . $this->id;
-            }
-
-            $extraOptions = [];
-
-            foreach ($options as $key => $value) {
-                switch ($key) {
-                    case 'filter':
-                    case 'display':
-                    case 'sort':
-                    case 'limit':
-                        $extraOptions[$key] = $value;
-                        break;
-                }
-            }
-
-            $extraOptions = http_build_query($extraOptions);
-
-            if (!empty($extraOptions))
-                $this->url .= '?' . $extraOptions;
-
-            $xml = $this->execute([
-                CURLOPT_CUSTOMREQUEST => "GET",
-            ]);
-
-            if ($this->id) {
-                return $this->xmlToArray($xml);
-            } else {
-
-                if (empty($xml)) {
-                    return false;
-                }
-
-                $result = $this->xmlToArray($xml);
-                if (!isset($result[$this->resource]['id'])) {
-                    $result = $this->xmlToArray($xml)[$this->resource];
-                }
-
-
-                $tmp = [];
-
-                foreach ($result as $items) {
-                    $tmp[$this->resource][] = $items;
-                }
-                return $tmp;
-            }
-        } else {
+        if (!$this->resource)
             throw new Exception('Resource is required');
+
+        $this->url .= '/' . $this->resource . '/';
+
+        if ($this->id) {
+            $this->url .= '/' . $this->id;
         }
+
+        $extraOptions = [];
+
+        foreach ($options as $key => $value) {
+            switch ($key) {
+                case 'filter':
+                case 'display':
+                case 'sort':
+                case 'limit':
+                    $extraOptions[$key] = $value;
+                    break;
+            }
+        }
+
+        $extraOptions = http_build_query($extraOptions);
+
+        if (!empty($extraOptions))
+            $this->url .= '?' . $extraOptions;
+
+        $xml = $this->execute([
+            CURLOPT_CUSTOMREQUEST => "GET",
+        ]);
+
+        if (!$this->id) {
+            if (empty($xml))
+                return false;
+            $result = $this->xmlToArray($xml);
+
+            if (!isset($result[$this->resource]['id']))
+                $result = $this->xmlToArray($xml)[$this->resource];
+
+            $tmp = [];
+
+            foreach ($result as $items) {
+                $tmp[$this->resource][] = $items;
+            }
+            return $tmp;
+        }
+
+        return $this->xmlToArray($xml);
     }
 
     public function add($options)
     {
-        $resource = $options['resource'];
-        $data = $options['data'];
+        $resource = $options['resource'] ?? null;
+        $data = $options['data'] ?? null;
 
-        if ($resource) {
-            $this->url .= '/' . $resource . '/';
-
-            if ($data && is_array($data)) {
-                return $this->execute([
-                    CURLOPT_POST => 1,
-                    CURLOPT_POSTFIELDS => http_build_query($data)
-                ]);
-            } else {
-                throw new Exception('Error');
-            }
-        } else {
+        if (!$resource)
             throw new Exception('Resource is required');
-        }
+
+        $this->url .= '/' . $resource . '/';
+
+        if (!($data && is_array($data)))
+            throw new Exception('Error');
+
+        return $this->execute([
+            CURLOPT_POST => 1,
+            CURLOPT_POSTFIELDS => http_build_query($data)
+        ]);
     }
 
     public function edit($options)
     {
-        $resource = $options['resource'];
-        $id = $options['id'];
-        $data = $options['data'];
+        $resource = $options['resource'] ?? null;
+        $id = $options['id'] ?? null;
+        $data = $options['data'] ?? null;
 
-        if ($resource) {
-            $this->url .= '/' . $resource . '/';
-
-            if ($id) {
-                $this->url .= $id;
-
-                if ($data) {
-                    return $this->execute([
-                        CURLOPT_CUSTOMREQUEST => 'PUT',
-                        CURLOPT_POSTFIELDS => http_build_query($data),
-                    ]);
-                } else {
-                    throw new Exception('Data is required');
-                }
-            } else {
-                throw new Exception('Id is required');
-            }
-        } else {
+        if (!$resource)
             throw new Exception('Resource is required');
-        }
+
+        $this->url .= '/' . $resource . '/';
+
+        if (!$id)
+            throw new Exception('Id entity is required');
+
+        $this->url .= $id;
+
+        if (!$data)
+            throw new Exception('Data is required');
+
+        return $this->execute([
+            CURLOPT_CUSTOMREQUEST => 'PUT',
+            CURLOPT_POSTFIELDS => http_build_query($data),
+        ]);
     }
 
     public function delete($options)
     {
-        $resource = $options['resource'];
-        $id = $options['id'];
+        $resource = $options['resource'] ?? null;
+        $id = $options['id'] ?? null;
 
-        if ($resource) {
-            if ($id) {
-                $this->url .= '/' . $resource . '/' . $id;
-
-                return $this->execute([
-                    CURLOPT_CUSTOMREQUEST => 'DELETE'
-                ]);
-            } else {
-                throw new Exception('Id is required');
-            }
-        } else {
+        if (!$resource)
             throw new Exception('Resource is required');
-        }
+
+        if (!$id)
+            throw new Exception('Id entity is required');
+
+        $this->url .= '/' . $resource . '/' . $id;
+
+        return $this->execute([
+            CURLOPT_CUSTOMREQUEST => 'DELETE'
+        ]);
     }
 
     private function execute($curlOptions)
@@ -171,12 +161,17 @@ class Webservice
         $response = curl_exec($curl);
         $err = curl_error($curl);
 
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
         curl_close($curl);
 
         if ($err) {
             throw new Exception('cURL Error #:' . $err);
         } else {
-            return $response;
+            return [
+                'message' => $response,
+                'code' => $httpCode
+            ];
         }
     }
 
