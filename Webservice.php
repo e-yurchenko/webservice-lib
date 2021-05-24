@@ -9,6 +9,7 @@ class Webservice
     protected $resource;
     protected $id;
     protected $client;
+    protected $isGet = false;
 
     public function __construct($url, $password)
     {
@@ -18,6 +19,7 @@ class Webservice
 
     public function get($options)
     {
+        $this->isGet = true;
         if (isset($options['resource']))
             $this->resource = $options['resource'];
 
@@ -54,6 +56,10 @@ class Webservice
         $xml = $this->execute([
             CURLOPT_CUSTOMREQUEST => "GET",
         ]);
+
+        if (isset($xml['code']) && $xml['code'] != 200) {
+            return false;
+        }
 
         if (!$this->id) {
             if (empty($xml))
@@ -168,10 +174,14 @@ class Webservice
         if ($err) {
             throw new Exception('cURL Error #:' . $err);
         } else {
-            return [
-                'message' => $response,
-                'code' => $httpCode
-            ];
+            if ($this->isGet) {
+                return $response;
+            } else {
+                return [
+                    'message' => $response,
+                    'code' => $httpCode
+                ];
+            }
         }
     }
 
